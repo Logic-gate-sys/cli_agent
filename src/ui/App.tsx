@@ -17,14 +17,11 @@ interface ActiveToolCall extends ToolCallProps {
 export function App() {
   const { exit } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<
-    ModelMessage[]
-  >([]);
+  const [conversationHistory, setConversationHistory] = useState< ModelMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [activeToolCalls, setActiveToolCalls] = useState<ActiveToolCall[]>([]);
-  const [pendingApproval, setPendingApproval] =
-    useState<ToolApprovalRequest | null>(null);
+  const [pendingApproval, setPendingApproval] = useState<ToolApprovalRequest | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
 
   const handleSubmit = useCallback(
@@ -44,10 +41,10 @@ export function App() {
 
       try {
         const newHistory = await runAgent(userInput, conversationHistory, {
-          onToken: (token:any) => {
-            setStreamingText((prev) => prev + token);
+          onToken: (token: any) => {
+          setStreamingText((prev) => prev + token);
           },
-          onToolCallStart: (name:any, args:any) => {
+          onToolCallStart: (name: any, args: any) => {
             setActiveToolCalls((prev) => [
               ...prev,
               {
@@ -58,7 +55,7 @@ export function App() {
               },
             ]);
           },
-          onToolCallEnd: (name:any, result:any) => {
+          onToolCallEnd: (name: any, result: any) => {
             setActiveToolCalls((prev) =>
               prev.map((tc) =>
                 tc.name === name && tc.status === "pending"
@@ -140,11 +137,14 @@ export function App() {
           </Box>
         )}
 
-        {isLoading && !streamingText && activeToolCalls.length === 0 && !pendingApproval && (
-          <Box marginTop={1}>
-            <Spinner />
-          </Box>
-        )}
+        {isLoading &&
+          !streamingText &&
+          activeToolCalls.length === 0 &&
+          !pendingApproval && (
+            <Box marginTop={1}>
+              <Spinner />
+            </Box>
+          )}
 
         {pendingApproval && (
           <ToolApproval

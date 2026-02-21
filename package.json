@@ -13,6 +13,7 @@
     "dev": "tsx watch --env-file=.env src/index.ts",
     "start": "tsx --env-file=.env src/index.ts",
     "eval": "npx lmnr eval",
+    "eval:multi-turn":"npx lmnr eval evals/multiturn.eval.ts",
     "eval:file-tools": "npx lmnr eval evals/file-tools.eval.ts",
     "eval:shell-tools": "npx lmnr eval evals/shell-tools.eval.ts",
     "eval:agent": "npx lmnr eval evals/agent-multiturn.eval.ts"

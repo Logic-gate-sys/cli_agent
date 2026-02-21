@@ -1,7 +1,23 @@
 import { getDateTime } from "./dateTime.ts";
+import { readFile, writeFile, listFiles, deleteFile } from "./file.ts";
 
-
-// export all tools for agent usage 
+// All tools combined for the agent
 export const tools = {
-    getDateTime,
+  getDateTime,
+  readFile,
+  writeFile,
+  listFiles,
+  deleteFile,
+};
+
+// Export individual tools for selective use in evals
+export { readFile, writeFile, listFiles, deleteFile } from "./file.ts";
+
+// Tool sets for evals
+export const fileTools = {
+  readFile,
+  writeFile,
+  listFiles,
+  deleteFile,
+  getDateTime,
 };

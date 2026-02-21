@@ -1,15 +1,12 @@
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import { generateObject } from "ai";
-
 import type {
   EvalTarget,
   SingleTurnResult,
   MultiTurnTarget,
   MultiTurnResult,
 } from "./types.ts";
-import { open } from "fs";
 
 /**
  * Evaluator: Precision/recall score for tool selection.
@@ -108,8 +105,8 @@ export const judgeSchema = z.object({
 })
 
 export async function llmJudge(output: MultiTurnResult, target: MultiTurnTarget) {
-  const res = await generateObject({
-    model: openai('gpt-4o-mini'),
+  const result = await generateObject({
+    model: openai('gpt-5-mini'),
     schema: judgeSchema,
     schemaName: 'eval',
     providerOptions: {
@@ -131,15 +128,15 @@ export async function llmJudge(output: MultiTurnResult, target: MultiTurnTarget)
       {
         role: "user",
         content: `Task: ${target.originalTask}
-
-Tools called: ${JSON.stringify(output.toolCallOrder)}
-Tool results provided: ${JSON.stringify(target.mockToolResults)}
-
-Agent's final response:
-${output.text}
-
-Evaluate if this response correctly uses the tool results to answer the task.`,
+                  Tools called: ${JSON.stringify(output.toolCallOrder)}
+                  Tool results provided: ${JSON.stringify(target.mockToolResults)}
+                  Agent's final response:
+                  ${output.text}
+                  Evaluate if this response correctly uses the tool results to answer the task.`,
       },
     ]
   });
+
+  // return llm judge result : score & reason
+  return result.object.score/10; 
 }; 

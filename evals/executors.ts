@@ -1,15 +1,16 @@
-import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
-import { generateText, stepCountIs, tool, UnsupportedModelVersionError, type ToolSet } from "ai";
+import { z } from 'zod'; 
+import { generateText, stepCountIs, tool, type ModelMessage, type ToolSet } from "ai";
 import type {
   EvalData,
-  SingleTurnResult,
   MultiTurnEvalData,
   MultiTurnResult,
 } from "./types.ts";
-import { buildMessages } from "./utils.ts";
-import { resourceLimits } from "worker_threads";
-import { text } from "stream/consumers";
+import { buildMessages, buildMockedTools } from "./utils.ts";
+import { SYSTEM_PROMPT } from "../src/agent/system/prompt.ts";
+
+
+const MODEL_NAME = 'gpt-5-mini';
 
 // tool definitions for evals
 const TOOL_DEFINITIONS: Record<string,{ description: string; parameters: z.ZodObject<z.ZodRawShape> }> = {
@@ -91,4 +92,63 @@ export async function singleTurnExecutor(data: EvalData) {
       selectedAny: toolNames.length > 0 
     }
   } 
+}
+
+
+export async function multiTurnExecutor(data: MultiTurnEvalData):Promise<MultiTurnResult> {
+  const tools = buildMockedTools(data.mockTools);
+  // build messages
+  const messages: ModelMessage[] = data.messages ?? [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: data.prompt! }
+  ];
+  
+  // generate text : vercel multi-step loop 
+  const result = await generateText({
+    model: openai(MODEL_NAME),
+    messages: messages,
+    tools: tools,
+    stopWhen: stepCountIs(data.config?.maxSteps ?? 20),
+    providerOptions: {
+      openai: {
+        reasoningEffort: 'high'
+      }
+    }
+  });
+  // tools call order 
+  let toolsCallOrder: string[] = [];
+  // all steps 
+  const steps = result.steps.map((step) => {
+    const stepToolCalls = (step.toolCalls ?? []).map((tc) => {
+      toolsCallOrder.push(tc.toolName);
+      return {
+        toolName: tc.toolName,
+        args: 'args' in tc ? tc.args : {}
+      }
+    })
+    // step toolResults 
+    const stepToolResults = (step.toolResults ?? []).map((tr) => ({
+      toolName: tr.toolName,
+      results: 'results' in tr ? tr.results: {}
+    }))
+
+    // return toolscall, result, text for step
+    return {
+      toolsCall: stepToolCalls.length> 0 ? stepToolCalls: undefined,
+      toolsResult: stepToolResults.length> 0? stepToolResults: undefined,
+      text: step.text || undefined
+    }
+  });
+
+  // unique tools use 
+  const toolsUsed = [...new Set(toolsCallOrder)]
+  
+  return {
+    text: result.text,
+    steps,
+    toolCallOrder: toolsCallOrder,
+    toolsUsed
+  }
+
+
 }

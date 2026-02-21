@@ -1,0 +1,60 @@
+import { evaluate } from "@lmnr-ai/lmnr";
+import { multiTurnExecutor } from "./executors.ts";
+import { llmJudge, toolOrderCorrect, toolsAvoided,  } from "./evaluators.ts";
+import type {
+  MultiTurnEvalData,
+  MultiTurnTarget,
+  MultiTurnResult,
+} from "./types.ts";
+import dataset from "./data/agent-multiturn.json" with { type: "json" };
+
+/**
+ * Multi-Turn Agent Evaluation
+ *
+ * Tests full agent behavior with mocked tools:
+ * 1. Fresh task: User's first message, check tools + order + LLM judge
+ * 2. Mid-conversation: Pre-filled messages, check continuation behavior
+ * 3. Negative: Ensure wrong tool category not used (file vs shell)
+ *
+ * All tools are mocked to return fixed values for deterministic testing.
+ *
+ * Evaluators:
+ * - toolOrderCorrect: Did tools get called in expected sequence?
+ * - toolsAvoided: Were forbidden tools not called?
+ * - llmJudge: Does the final response make sense given the task and results?
+ */
+
+const executor = async (data: MultiTurnEvalData): Promise<MultiTurnResult> => {
+  return multiTurnExecutor(data);
+};
+
+evaluate({
+  data: dataset as unknown as Array<{
+    data: MultiTurnEvalData;
+    target: MultiTurnTarget;
+  }>,
+  executor,
+  evaluators: {
+    // Check if tools were called in the expected order
+    toolOrder: (output, target) => {
+      if (!target) return 1;
+      return toolOrderCorrect(output, target);
+    },
+
+    // Check if forbidden tools were avoided
+    toolsAvoided: (output, target) => {
+      if (!target?.forbiddenTools?.length) return 1;
+      return toolsAvoided(output, target);
+    },
+
+    // LLM judge to evaluate output quality
+    outputQuality: (output, target) => {
+      if (!target) return 1;
+      return llmJudge(output, target);
+    }
+  },
+  config: {
+    projectApiKey: process.env.LMNR_PROJECT_API_KEY,
+  },
+  groupName: "Agent multi-turn",
+});
