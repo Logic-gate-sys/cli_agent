@@ -44,10 +44,10 @@ export function App() {
 
       try {
         const newHistory = await runAgent(userInput, conversationHistory, {
-          onToken: (token) => {
+          onToken: (token:any) => {
             setStreamingText((prev) => prev + token);
           },
-          onToolCallStart: (name, args) => {
+          onToolCallStart: (name:any, args:any) => {
             setActiveToolCalls((prev) => [
               ...prev,
               {
@@ -58,7 +58,7 @@ export function App() {
               },
             ]);
           },
-          onToolCallEnd: (name, result) => {
+          onToolCallEnd: (name:any, result:any) => {
             setActiveToolCalls((prev) =>
               prev.map((tc) =>
                 tc.name === name && tc.status === "pending"
@@ -67,7 +67,7 @@ export function App() {
               ),
             );
           },
-          onComplete: (response) => {
+          onComplete: (response: any) => {
             if (response) {
               setMessages((prev) => [
                 ...prev,
