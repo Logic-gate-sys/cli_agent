@@ -1,8 +1,19 @@
 import { generateText, type ModelMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { extractMessageText } from "./tokenEstimator.ts";
-
+import { open } from "fs";
+const MODEL_NAME = "gpt-5-mini";
 const SUMMARIZATION_PROMPT = `
+You are a conversation summarizer. Your task is to create a concise summary of the conversation so far that preserves:
+
+1. Key decisions and conclusions reached
+2. Important context and facts mentioned
+3. Any pending tasks or questions
+4. The overall goal of the conversation
+
+Be concise but complete. The summary should allow the conversation to continue naturally.
+
+Conversation to summarize:
 `;
 
 /**
@@ -33,5 +44,31 @@ export async function compactConversation(
   model: string = "gpt-5-mini",
 ): Promise<any> {
   // Filter out system messages - they're handled separately
-  //
+  const conversationHistory = messages.filter((msg) => msg.role !== "system");
+  if (conversationHistory.length === 0) {
+    return [];
+  }
+  // get a text of the entire conversation
+  const conversationText = messagesToText(conversationHistory);
+  //summary
+  const { text: summary } = await generateText({
+    model: openai(MODEL_NAME),
+    prompt: SUMMARIZATION_PROMPT + conversationText,
+  });
+
+  // compacte messages
+  const compactedMessages: ModelMessage[] = [
+    {
+      role: "user",
+      content: `[CONVERSATION SUMMARY]\nThe following is a summary of our conversation so far:\n\n${summary}\n\nPlease  continue from where we left off.`,
+    },
+    {
+      role: "assistant",
+      content:
+        "I understand. I've reviewed the summary of our conversation and I'm ready to continue. How can I help you next?",
+    },
+  ];
+
+  // return compacted messages 
+  return compactedMessages; 
 }

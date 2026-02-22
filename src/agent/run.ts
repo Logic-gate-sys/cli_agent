@@ -7,6 +7,9 @@ import { SYSTEM_PROMPT } from "./system/prompt.ts";
 import { Laminar } from "@lmnr-ai/lmnr";
 import type { AgentCallbacks, ToolCallInfo } from "../types.ts";
 import { filterCompatibleMessages } from "./system/filterMessages.ts";
+import { calculateUsagePercentage, DEFAULT_THRESHOLD, getModelLimits, isOverThreshold } from "./context/modelLimits.ts";
+import { estimateMessagesTokens } from "./context/tokenEstimator.ts";
+import { compactConversation } from "./context/compaction.ts";
 
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
@@ -20,15 +23,38 @@ export async function runAgent(
   callbacks: AgentCallbacks,
 ): Promise<ModelMessage[]> {
   // Filter and check if we need to compact the conversation history before starting
-  const workingHistory = filterCompatibleMessages(conversationHistory);
-
+  let workingHistory = filterCompatibleMessages(conversationHistory);
+  
   const messages: ModelMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
     ...workingHistory,
     { role: "user", content: userMessage },
   ];
 
+  // model limit 
+  const modelLimit = getModelLimits(MODEL_NAME);
+  const currentTokenUser = estimateMessagesTokens(messages); 
+  //if context window is full summaries
+  if (isOverThreshold(currentTokenUser.total, modelLimit.contextWindow)) {
+    workingHistory = await compactConversation(workingHistory)
+  }
+
   let fullResponse = "";
+  // function to report tokenUsage to ui 
+  const reportTokenUsage = () => {
+    if (callbacks.onTokenUsage) {
+      const usage = estimateMessagesTokens(messages); 
+      callbacks.onTokenUsage({
+        inputTokens: usage.input,
+        outputTokens: usage.output,
+        totalTokens: usage.total,
+        contextWindow: modelLimit.contextWindow,
+        threshold: DEFAULT_THRESHOLD,
+        percentage: calculateUsagePercentage(usage.total, modelLimit.contextWindow)
+      })
+    }
+  }
+
 
   while (true) {
     const result = streamText({
@@ -89,6 +115,8 @@ export async function runAgent(
     if (finishReason !== "tool-calls" || toolCalls.length === 0) {
       const responseMessages = await result.response;
       messages.push(...responseMessages.messages);
+      // report tokenUsage
+      reportTokenUsage(); 
       break;
     }
 
@@ -114,6 +142,8 @@ export async function runAgent(
   }
 
   callbacks.onComplete(fullResponse);
+  //report tokenUsage
+  reportTokenUsage();
 
   return messages;
 }
