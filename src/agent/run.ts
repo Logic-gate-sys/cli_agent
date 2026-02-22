@@ -10,6 +10,7 @@ import { filterCompatibleMessages } from "./system/filterMessages.ts";
 import { calculateUsagePercentage, DEFAULT_THRESHOLD, getModelLimits, isOverThreshold } from "./context/modelLimits.ts";
 import { estimateMessagesTokens } from "./context/tokenEstimator.ts";
 import { compactConversation } from "./context/compaction.ts";
+import { isReadable } from "stream";
 
 Laminar.initialize({
   projectApiKey: process.env.LMNR_API_KEY,
@@ -122,8 +123,15 @@ export async function runAgent(
 
     const responseMessages = await result.response;
     messages.push(...responseMessages.messages);
-
+    let rejected = false;
     for (const tc of toolCalls) {
+      // approval in the UI 
+      const approved = await callbacks.onToolApproval(tc.toolName, tc.args); 
+      if (!approved) {
+        rejected = true; 
+        break;
+      }
+
       const result = await executeTools(tc.toolName, tc.args);
       callbacks.onToolCallEnd(tc.toolName, result);
 
@@ -138,6 +146,11 @@ export async function runAgent(
           },
         ],
       });
+    }
+    
+    // if rejected
+    if (rejected) {
+      break; 
     }
   }
 
