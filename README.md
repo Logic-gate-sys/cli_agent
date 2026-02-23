@@ -1,15 +1,11 @@
-# cli_agent
    ---
-   # cli_agent
-
+   # CLI Agent
    This repository contains a command-line AI agent (agi) built with TypeScript and powered by the lmnr
    framework and the AI/OpenAI SDKs. The project provides a CLI entrypoint, evaluation scripts, and
    examples for using shell/file tools and multi-turn agents.
 
    ---
-
    ## Quick overview
-
    - Project name: agi
    - CLI binary (after build): `dist/cli.js` (exposed as the `agi` bin in package.json)
    - Primary source: `src/` (TypeScript)
@@ -17,11 +13,8 @@
    - Evaluations and tests: `evals/`
 
    ---
-
    ## Directory structure
-
    Top-level files and folders you will commonly use:
-
    - .claude/                - (project-specific metadata/config for Claude integrations, if any)
    - .env                    - environment variables (API keys). DO NOT commit this file. Create your own
     `.env` locally.
@@ -45,12 +38,9 @@
    `CLAUDE.md` which explain agent-specific config and usage in greater detail.
 
    ---
-
    ## What the agent can do
-
    This repository implements a CLI AI agent scaffold which typically supports the following capabilities
     (actual capabilities depend on the code in `src/` and available tool registrations):
-
    - Run as a CLI application (development mode or built JS in `dist/`).
    - Use language models via `@ai-sdk/openai`, `ai`, and the `@lmnr-ai/lmnr` framework.
    - Execute shell commands and interact with the filesystem via tools (dependencies include `shelljs`).
@@ -63,62 +53,44 @@
    are registered and how agents are configured.
 
    ---
-
    ## Prerequisites
-
    - Node.js (recommended: 18+)
    - npm
    - API keys for the model providers you intend to use (OpenAI, LMNR project keys, etc.)
 
    Important: put your secrets in a local `.env` file (the code uses `dotenv`). Do not commit `.env` to
    the repository. If you accidentally commit secret keys, rotate them immediately.
-
+   
    ---
-
    ## Installation
-
    1. Install dependencies:
-
       npm install
 
    2. Create a `.env` in the project root with at least the API keys you need. Example (DO NOT copy/paste
     real keys you find in repos or screenshots):
-
       OPENAI_API_KEY=sk-...
       LMNR_PROJECT_API_KEY=...
 
    3. (Optional) Build the project to JavaScript:
-
       npm run build
 
    ---
-
    ## Running the agent
-
    - Development (TypeScript with watch):
-
      npm run dev
-
      This runs `tsx watch --env-file=.env src/index.ts` so you can iterate quickly.
 
    - Start (one-off run without building):
-
      npm start
 
    - Production / built CLI:
-
      npm run build
-     node dist/cli.js
-
-     Or, to use the `agi` bin locally, you can run `npm link` after build and then run `agi` (or run the
-   built file directly).
+     npm install -g 
+     agi  # this runs the production build of the agent
 
    ---
-
    ## Running evaluations
-
    There are several npm scripts that run evaluation suites (these use `npx lmnr eval`):
-
    - npm run eval                # run default evaluation
    - npm run eval:multi-turn     # run multi-turn eval example
    - npm run eval:file-tools     # run file-tools eval script
@@ -129,9 +101,7 @@
    package.json as needed.
 
    ---
-
    ## How to extend or modify the agent
-
    - Add new tools: implement the tool in `src/` (suggested `src/tools/`), register it with the agent
    initialization code.
    - Add or adjust agents: update `AGENTS.md` and `src/` to define agent behaviors, prompts, and tool
@@ -140,29 +110,22 @@
    - Build and test locally: use `npm run dev` during development, `npm run build` for production.
 
    ---
-
    ## Security and best practices
-
    - Keep `.env` and other secret-bearing files out of git (this repo's `.gitignore` already excludes
    `.env`).
    - Rotate API keys if you believe they were exposed.
    - Use least-privilege API keys for development when possible.
 
    ---
-
    ## Troubleshooting
-
    - "Missing API key" errors: verify your `.env` contains the expected variables and that you restarted
    the dev server after editing `.env`.
    - Build/type errors: ensure you are using a recent Node.js version and that dependencies are installed
     (`npm install`).
 
    ---
-
    ## Contributing
-
    Contributions are welcome. Typical workflow:
-
    1. Fork the repo
    2. Create a feature branch
    3. Add/modify code and tests/evals
