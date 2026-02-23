@@ -12,7 +12,6 @@
    - Built output: `dist/`
    - Evaluations and tests: `evals/`
 
-   ---
    ## Directory structure
    Top-level files and folders you will commonly use:
    - .claude/                - (project-specific metadata/config for Claude integrations, if any)
@@ -37,7 +36,6 @@
    If you need a specific file's purpose, check that file; the repo already includes `AGENTS.md` and
    `CLAUDE.md` which explain agent-specific config and usage in greater detail.
 
-   ---
    ## What the agent can do
    This repository implements a CLI AI agent scaffold which typically supports the following capabilities
     (actual capabilities depend on the code in `src/` and available tool registrations):
@@ -52,7 +50,6 @@
    Note: The exact feature set and tools are implemented in `src/`. Inspect that folder to see how tools
    are registered and how agents are configured.
 
-   ---
    ## Prerequisites
    - Node.js (recommended: 18+)
    - npm
@@ -60,7 +57,7 @@
 
    Important: put your secrets in a local `.env` file (the code uses `dotenv`). Do not commit `.env` to
    the repository. If you accidentally commit secret keys, rotate them immediately.
-   
+
    ---
    ## Installation
    1. Install dependencies:
@@ -74,7 +71,6 @@
    3. (Optional) Build the project to JavaScript:
       npm run build
 
-   ---
    ## Running the agent
    - Development (TypeScript with watch):
      npm run dev
@@ -88,7 +84,6 @@
      npm install -g 
      agi  # this runs the production build of the agent
 
-   ---
    ## Running evaluations
    There are several npm scripts that run evaluation suites (these use `npx lmnr eval`):
    - npm run eval                # run default evaluation
@@ -100,7 +95,6 @@
    Check `evals/` for the TypeScript evaluation files; you can add new eval scripts and wire them into
    package.json as needed.
 
-   ---
    ## How to extend or modify the agent
    - Add new tools: implement the tool in `src/` (suggested `src/tools/`), register it with the agent
    initialization code.
@@ -116,14 +110,12 @@
    - Rotate API keys if you believe they were exposed.
    - Use least-privilege API keys for development when possible.
 
-   ---
    ## Troubleshooting
    - "Missing API key" errors: verify your `.env` contains the expected variables and that you restarted
    the dev server after editing `.env`.
    - Build/type errors: ensure you are using a recent Node.js version and that dependencies are installed
     (`npm install`).
 
-   ---
    ## Contributing
    Contributions are welcome. Typical workflow:
    1. Fork the repo
